@@ -22,19 +22,22 @@ export default function updateNode(node: Node, vNode: VNode): void {
 
     propList.forEach(prop => {
       if (processed[prop]) return;
-      setProp(node, prop, vProps[prop]);
+      if (vProps[prop] !== props[prop]) setProp(node, prop, vProps[prop]);
       processed[prop] = true;
     });
 
-    let length = Math.max(node.childNodes.length, vNode.children.length);
+    let length = Math.min(node.childNodes.length, vNode.children.length);
 
     for (let i = 0; i < length; i++) {
-      let child = node.childNodes[i];
-      let vChild = vNode.children[i];
+      updateNode(node.childNodes[i], vNode.children[i]);
+    }
 
-      if (child && vChild) updateNode(child, vChild);
-      else if (!vChild) node.removeChild(child);
-      else if (!child) node.appendChild(createNode(vChild));
+    while (node.childNodes.length > vNode.children.length) {
+      if (node.lastChild) node.removeChild(node.lastChild);
+    }
+
+    for (let i = length; i < vNode.children.length; i++) {
+      node.appendChild(createNode(vNode.children[i]));
     }
   } else if (!(isComment(node) && isVComment(vNode))) {
     if (!node.parentNode) return;
